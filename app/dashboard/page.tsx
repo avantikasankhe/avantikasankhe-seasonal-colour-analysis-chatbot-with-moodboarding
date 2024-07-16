@@ -1,13 +1,58 @@
+'use client'
 import Link from 'next/link';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
-export function Dashboard() {
+export default function Dashboard() {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push('/'); // Redirect to Landing if user is not signed in
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  const handleSignOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      router.push('/'); // Redirect to Landing after sign out
+      toast({
+        title: "Success",
+        description: "Sign out successful!",
+      });
+    } catch (error: any) {
+      console.error('Sign out error:', error);
+      toast({
+        title: "Error",
+        description: error,
+        action: <ToastAction altText="Try again">Try again</ToastAction>,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
-        <Link href="#" className="flex items-center gap-2 text-lg font-semibold" prefetch={false}>
+        <Link href="#" className="flex items-center gap-2 text-lg font-semibold " prefetch={false}>
           <LayoutGridIcon className="h-6 w-6" />
           <span>Dashboard</span>
         </Link>
@@ -24,14 +69,14 @@ export function Dashboard() {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
-      <main className="flex flex-1 items-center justify-center p-4 sm:p-6">
-        <div className="grid w-full max-w-6xl grid-cols-1 gap-8 sm:grid-cols-2">
+      <main className="flex flex-1 items-center justify-center  sm:p-6 bg-blue-200">
+        <div className="grid w-full max-w-6xl grid-cols-1 gap-8 sm:grid-cols-2 ">
           <Link
-            href="#"
+            href="/chatbot"
             className="group relative flex h-64 flex-col items-center justify-center rounded-lg bg-card p-6 text-center transition-all hover:bg-card-hover hover:shadow-lg"
             prefetch={false}
           >
@@ -40,8 +85,8 @@ export function Dashboard() {
             <p className="mt-2 text-sm text-muted-foreground">Interact with our conversational AI assistant.</p>
           </Link>
           <Link
-            href="#"
-            className="group relative flex h-64 flex-col items-center justify-center rounded-lg bg-card p-6 text-center transition-all hover:bg-card-hover hover:shadow-lg"
+            href="/moodboard" // Change this line to navigate to the Moodboard page
+            className="group relative flex h-64 flex-col items-center justify-center rounded-lg bg-card p-6 text-center transition-all hover:bg-card-hover hover:shadow-lg "
             prefetch={false}
           >
             <ImageIcon className="h-10 w-10 text-primary" />
@@ -53,6 +98,8 @@ export function Dashboard() {
     </div>
   );
 }
+
+// Icon components remain unchanged...
 
 function ImageIcon(props: React.SVGProps<SVGSVGElement>) {
   return (

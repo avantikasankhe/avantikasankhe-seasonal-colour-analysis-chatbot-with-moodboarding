@@ -1,22 +1,28 @@
 // app/page.tsx
-import { useState } from "react";
-import { Signup } from "@/components/page-comps/Signup";
-import { Dashboard } from "@/components/page-comps/Dashboard";
+'use client';
 
-export default function Home() {
-  const [isSignedUp, setIsSignedUp] = useState(false);
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import Landing from './landing/page';
 
-  const handleSignUpSuccess = () => {
-    setIsSignedUp(true);
-  };
+export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Redirect to Dashboard if the user is signed in
+        router.push('/dashboard');
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   return (
     <>
-      {isSignedUp ? (
-        <Dashboard />
-      ) : (
-        <Signup onSignUpSuccess={handleSignUpSuccess} />
-      )}
+      <Landing></Landing>
     </>
   );
 }
